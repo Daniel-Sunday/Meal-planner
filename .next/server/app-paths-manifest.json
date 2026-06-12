@@ -1,0 +1,9 @@
+{
+  "/planner/page": "app/planner/page.js",
+  "/recipes/page": "app/recipes/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/insights/page": "app/insights/page.js",
+  "/blog/budget-friendly-nigerian-meals/page": "app/blog/budget-friendly-nigerian-meals/page.js",
+  "/blog/what-should-i-cook-this-week/page": "app/blog/what-should-i-cook-this-week/page.js",
+  "/shopping/page": "app/shopping/page.js"
+}
