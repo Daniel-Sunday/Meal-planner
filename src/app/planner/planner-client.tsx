@@ -296,9 +296,10 @@ interface DailyViewProps {
   activeDay: number;
   setActiveDay: (idx: number) => void;
   showToast: (msg: string) => void;
+  onCustomizeMeal: (type: string) => void;
 }
 
-function DailyView({ plan, setLocalPlan, selected, servings, favs, onToggleFav, activeDay, setActiveDay, showToast }: DailyViewProps) {
+function DailyView({ plan, setLocalPlan, selected, servings, favs, onToggleFav, activeDay, setActiveDay, showToast, onCustomizeMeal }: DailyViewProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   function regenDay() {
@@ -331,28 +332,7 @@ function DailyView({ plan, setLocalPlan, selected, servings, favs, onToggleFav, 
   }
 
   function handleSwapMeal(type: string) {
-    const currentMeal = meals[type as keyof typeof meals];
-    const typeMeals = NIGERIAN_MEALS.filter(m => m.mealType === type);
-    let pool = typeMeals.filter(m => selected.some(prefId => mealMatchesPreference(m, prefId)));
-    if (pool.length === 0) {
-      pool = typeMeals;
-    }
-
-    const poolMealNames = pool.map(m => m.name).filter(m => m !== currentMeal);
-    if (poolMealNames.length > 0) {
-      // Get previous day's meal for consecutive check
-      let previousMeal: string | undefined;
-      const dayIdx = DAYS.indexOf(day);
-      if (dayIdx > 0) {
-        const prevDayName = DAYS[dayIdx - 1];
-        previousMeal = plan[prevDayName]?.[type as keyof DayMeals];
-      }
-
-      const newMeal = pickWithBias(poolMealNames, type, favs, previousMeal);
-      const newPlan = { ...plan };
-      newPlan[day] = { ...newPlan[day], [type]: newMeal };
-      setLocalPlan(newPlan);
-    }
+    onCustomizeMeal(type);
   }
 
   const day = DAYS[activeDay];
@@ -619,6 +599,333 @@ function FavouritesView({ favs, onRemove }: FavouritesViewProps) {
   );
 }
 
+// ─── MEAL CUSTOMIZER VIEW ───────────────────────────────────────────────────
+
+interface MealCustomizerViewProps {
+  day: string;
+  type: string;
+  currentMeal: string;
+  favs: MealItem[];
+  selectedPreferences: string[];
+  onSelectMeal: (mealName: string) => void;
+  onCancel: () => void;
+}
+
+function MealCustomizerView({
+  day,
+  type,
+  currentMeal,
+  favs,
+  selectedPreferences,
+  onSelectMeal,
+  onCancel,
+}: MealCustomizerViewProps) {
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "favourites" | "kids" | "low" | "medium" | "high">("all");
+  const [customCombo, setCustomCombo] = useState("");
+
+  const typeMeals = NIGERIAN_MEALS.filter((m) => m.mealType === type);
+
+  // Filter logic
+  let filtered = typeMeals;
+
+  if (search.trim()) {
+    const term = search.toLowerCase();
+    filtered = filtered.filter(
+      (m) =>
+        m.name.toLowerCase().includes(term) ||
+        m.category.toLowerCase().includes(term) ||
+        m.ingredients.some((ing) => ing.toLowerCase().includes(term))
+    );
+  }
+
+  if (categoryFilter === "favourites") {
+    filtered = filtered.filter((m) => isFavourited(favs, m.name));
+  } else if (categoryFilter === "kids") {
+    filtered = filtered.filter((m) => m.suitableForKids);
+  } else if (categoryFilter === "low") {
+    filtered = filtered.filter((m) => m.budgetLevel === "Low");
+  } else if (categoryFilter === "medium") {
+    filtered = filtered.filter((m) => m.budgetLevel === "Medium");
+  } else if (categoryFilter === "high") {
+    filtered = filtered.filter((m) => m.budgetLevel === "High");
+  }
+
+  const handleCustomComboSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customCombo.trim()) {
+      onSelectMeal(customCombo.trim());
+    }
+  };
+
+  const filterOptions = [
+    { id: "all", label: "All Options" },
+    { id: "favourites", label: "❤️ Saved" },
+    { id: "kids", label: "👶 Kids" },
+    { id: "low", label: "₦ Low" },
+    { id: "medium", label: "₦₦ Mid" },
+    { id: "high", label: "₦₦₦ High" },
+  ];
+
+  return (
+    <div style={{ background: "#F5EFE6", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Premium Sub-screen Header */}
+      <div style={{
+        background: "#2D5016",
+        padding: "1.25rem 1rem 1.25rem",
+        color: "#F5EFE6"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button 
+            onClick={onCancel}
+            style={{
+              background: "transparent",
+              border: "1px solid #E8DDD033",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              color: "#F5EFE6",
+              fontSize: 18,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontFamily: "'Figtree', sans-serif"
+            }}
+          >
+            ←
+          </button>
+          <div>
+            <div style={{ fontSize: 11, color: "#9FE1CB", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Customizing {day}
+            </div>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 700, color: "#F5EFE6", margin: 0, marginTop: 2 }}>
+              Choose {type.charAt(0).toUpperCase() + type.slice(1)}
+            </h2>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Container */}
+      <div style={{ flex: 1, padding: "1.5rem 1rem 5rem" }}>
+        
+        {/* Search Input */}
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <input
+            type="text"
+            placeholder={`🔍 Search ${type} (e.g. Rice, Beans, Eggs)`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px 16px 12px 40px",
+              borderRadius: 100,
+              border: "1px solid #E8DDD0",
+              background: "#FFFFFF",
+              fontFamily: "'Figtree', sans-serif",
+              fontSize: 14,
+              color: "#1A2E0A",
+              outline: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.02)"
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              style={{
+                position: "absolute",
+                right: 14,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "transparent",
+                border: "none",
+                color: "#8A7968",
+                fontSize: 14,
+                cursor: "pointer"
+              }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        {/* Filter Pills */}
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 12, scrollbarWidth: "none", marginBottom: 16 }}>
+          {filterOptions.map((opt) => {
+            const isActive = categoryFilter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setCategoryFilter(opt.id as any)}
+                style={{
+                  flexShrink: 0,
+                  padding: "7px 14px",
+                  borderRadius: 100,
+                  background: isActive ? "#2D5016" : "#FFFFFF",
+                  color: isActive ? "#EAF3DE" : "#8A7968",
+                  border: isActive ? "none" : "1px solid #E8DDD0",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  fontFamily: "'Figtree', sans-serif"
+                }}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Combo Card */}
+        <div style={{
+          background: "#FBF7F2",
+          border: "1px dashed #C4622D",
+          borderRadius: 16,
+          padding: "14px",
+          marginBottom: 20,
+        }}>
+          <h4 style={{ fontFamily: "'Fraunces', serif", fontSize: 14, fontWeight: 700, color: "#1A2E0A", margin: "0 0 6px 0" }}>
+            💡 Build a Custom Combo
+          </h4>
+          <p style={{ color: "#3D4A30", fontSize: 12, margin: "0 0 12px 0", lineHeight: 1.4 }}>
+            Moms often pair foods! Enter any custom combination (e.g. "Akara, Bread & Pap").
+          </p>
+          <form onSubmit={handleCustomComboSubmit} style={{ display: "flex", gap: 8 }}>
+            <input
+              type="text"
+              placeholder="e.g. Yam, Plantain & Egg Sauce"
+              value={customCombo}
+              onChange={(e) => setCustomCombo(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "10px 14px",
+                borderRadius: 100,
+                border: "1px solid #E8DDD0",
+                background: "#FFFFFF",
+                fontFamily: "'Figtree', sans-serif",
+                fontSize: 13,
+                outline: "none"
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!customCombo.trim()}
+              style={{
+                background: customCombo.trim() ? "#C4622D" : "#F5EFE6",
+                color: customCombo.trim() ? "#FFF8F0" : "#8A7968",
+                border: customCombo.trim() ? "none" : "1px solid #E8DDD0",
+                borderRadius: 100,
+                padding: "10px 20px",
+                fontFamily: "'Figtree', sans-serif",
+                fontWeight: 600,
+                fontSize: 13,
+                cursor: customCombo.trim() ? "pointer" : "default"
+              }}
+            >
+              Add
+            </button>
+          </form>
+        </div>
+
+        {/* List Title */}
+        <h3 style={{ fontFamily: "'Fraunces', serif", color: "#1A2E0A", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+          Select from {type} options
+        </h3>
+
+        {/* Options Grid/List */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#8A7968", fontSize: 14 }}>
+              No matches found. Try searching something else or write a custom combo above!
+            </div>
+          ) : (
+            filtered.map((meal) => {
+              const isCurrent = meal.name === currentMeal;
+              const matchesProfile = selectedPreferences.some(prefId => mealMatchesPreference(meal, prefId));
+              const saved = isFavourited(favs, meal.name);
+
+              return (
+                <div
+                  key={meal.id}
+                  onClick={() => onSelectMeal(meal.name)}
+                  style={{
+                    background: "#FFFFFF",
+                    border: `1.5px solid ${isCurrent ? "#2D5016" : "#E8DDD0"}`,
+                    borderRadius: 16,
+                    padding: "14px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    position: "relative",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = isCurrent ? "#2D5016" : "#D9C9B4";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = isCurrent ? "#2D5016" : "#E8DDD0";
+                    e.currentTarget.style.transform = "translateY(0)";
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 16 }}>{getCuisineIcon(meal.category)}</span>
+                      <span style={{ color: "#8A7968", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                        {meal.category}
+                      </span>
+                    </div>
+                    {isCurrent && (
+                      <span style={{
+                        background: "#EAF3DE",
+                        color: "#2D5016",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        borderRadius: 100,
+                        padding: "2px 8px"
+                      }}>
+                        ✓ Active
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ color: "#1A2E0A", fontSize: 15, fontWeight: 600, fontFamily: "'Figtree', sans-serif" }}>
+                    {meal.name}
+                  </div>
+
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                    {matchesProfile && (
+                      <span style={{ background: "#EAF3DE", color: "#2D5016", fontSize: 10, fontWeight: 600, borderRadius: 100, padding: "2px 6px" }}>
+                        ✨ Matches Profile
+                      </span>
+                    )}
+                    {saved && (
+                      <span style={{ background: "#FBF7F2", border: "1px solid #C8432A33", color: "#C8432A", fontSize: 10, fontWeight: 600, borderRadius: 100, padding: "2px 6px" }}>
+                        ❤️ Saved
+                      </span>
+                    )}
+                    {meal.suitableForKids && (
+                      <span style={{ background: "#FBF7F2", color: "#8A7968", fontSize: 10, fontWeight: 600, borderRadius: 100, padding: "2px 6px", border: "1px solid #E8DDD0" }}>
+                        👶 Kids
+                      </span>
+                    )}
+                    <span style={{
+                      background: meal.budgetLevel === "Low" ? "#EAF3DE" : meal.budgetLevel === "Medium" ? "#F5E6DC" : "#FBF7F2",
+                      color: meal.budgetLevel === "Low" ? "#2D5016" : meal.budgetLevel === "Medium" ? "#C4622D" : "#8A7968",
+                      fontSize: 10, fontWeight: 600, borderRadius: 100, padding: "2px 6px", border: "1px solid #E8DDD0"
+                    }}>
+                      {meal.budgetLevel === "Low" ? "₦ Low" : meal.budgetLevel === "Medium" ? "₦₦ Mid" : "₦₦₦ High"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN PLANNER CLIENT ──────────────────────────────────────────────────────
 
 export default function PlannerClient() {
@@ -632,6 +939,7 @@ export default function PlannerClient() {
   const [favs, setFavs] = useState<MealItem[]>([]);
   const [toast, setToast] = useState({ visible: false, message: "" });
   const toastTimer = useRef<NodeJS.Timeout | null>(null);
+  const [activeCustomizeSlot, setActiveCustomizeSlot] = useState<{ day: string; type: string } | null>(null);
 
   // Initialize client state
   useEffect(() => {
@@ -707,9 +1015,38 @@ export default function PlannerClient() {
     { id: "favourites", label: "Saved",    icon: "❤️", badge: favCount > 0 ? favCount : null },
   ];
 
+  function handleSelectMeal(mealName: string) {
+    if (activeCustomizeSlot && plan) {
+      const { day, type } = activeCustomizeSlot;
+      const newPlan = { ...plan };
+      newPlan[day] = {
+        ...newPlan[day],
+        [type]: mealName
+      };
+      setPlan(newPlan);
+      setActiveCustomizeSlot(null);
+      showToast("🍽️ Meal updated!");
+    }
+  }
+
   if (!mounted || !plan) {
     return (
       <div style={{ background: "#F5EFE6", minHeight: "100vh", display: "flex", flexDirection: "column" }} />
+    );
+  }
+
+  if (activeCustomizeSlot) {
+    const currentMeal = plan[activeCustomizeSlot.day][activeCustomizeSlot.type as keyof DayMeals];
+    return (
+      <MealCustomizerView
+        day={activeCustomizeSlot.day}
+        type={activeCustomizeSlot.type}
+        currentMeal={currentMeal}
+        favs={favs}
+        selectedPreferences={selected}
+        onSelectMeal={handleSelectMeal}
+        onCancel={() => setActiveCustomizeSlot(null)}
+      />
     );
   }
 
@@ -801,6 +1138,7 @@ export default function PlannerClient() {
             activeDay={activeDay}
             setActiveDay={setActiveDay}
             showToast={showToast}
+            onCustomizeMeal={(type) => setActiveCustomizeSlot({ day: DAYS[activeDay], type })}
           />
         )}
         {tab === "weekly"     && (

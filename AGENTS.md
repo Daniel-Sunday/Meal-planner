@@ -312,7 +312,7 @@ Ask one clarifying question. Do not proceed with assumptions that contradict thi
 | Saved favourites (long press) | ✅ Done |
 | New design system applied | ✅ Done |
 | Today screen (return users skip to meals) | ✅ Done |
-| Single-tap meal swap | ✅ Done |
+| Single-tap interactive meal selection | ✅ Done |
 | WhatsApp share button | ✅ Done |
 | Dynamic shopping list | ✅ Done |
 | ₦ budget estimate | ⬜ Not started |
