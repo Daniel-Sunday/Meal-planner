@@ -1,384 +1,182 @@
-🍽️ Chop Chop 🇳🇬
+<div align="center">
 
-Premium African Meal Planner
+# 🍲 Chop Chop
 
-A simple, beautiful meal-planning app designed for Nigerian and West African households.
+### A Nigerian-first meal planning experience
 
-Chop Chop helps you decide what to cook for the entire week based on the meals and cuisines you enjoy. It creates a 7-day plan covering breakfast, lunch, and dinner, then turns that plan into a practical shopping list.
+**Plan your week. Discover what to cook. Shop with less stress.**
 
-«Less time wondering “What will I cook today?”
-More time enjoying good food with your family.»
+<br />
 
----
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com/)
 
-✨ Features
+<br />
 
-🗓️ Weekly Meal Planning
+[**View Demo**](#) · [**View Architecture**](#architecture) · [**View Source**](https://github.com/Daniel-Sunday/Meal-planner)
 
-Generate a complete 7-day meal plan with:
+</div>
 
-- Breakfast
-- Lunch
-- Dinner
-- Monday through Sunday
-- Meal times for each part of the day
+<br />
 
-The planner uses the user's selected food preferences to generate a varied weekly plan.
+<p align="center">
+  <img src="./current_state.png" alt="Chop Chop meal planner" width="420" />
+</p>
 
-🇳🇬 Nigerian & African Meals
+<br />
 
-The application is built around familiar Nigerian and African food preferences rather than generic international recipes.
+## What is Chop Chop?
 
-Meals are organized into categories that make it easy to select the kinds of food you actually want to eat.
+Chop Chop is a mobile-first meal planning app built around the realities of Nigerian and West African households. It helps people move from *"what are we cooking today?"* to a structured weekly plan built from meals and cuisines they actually enjoy — covering breakfast, lunch, and dinner, with favourites saved and turned into a shopping list.
 
-❤️ Favourite Meals
+## The Problem
 
-Save meals you love and allow them to influence future plans.
+Meal planning isn't hard because people don't know enough recipes — it's hard because the decision repeats every single day: what to cook, what everyone likes, what was cooked recently, what's in stock, what to buy. Chop Chop replaces that daily loop with a reusable weekly plan, so the product helps people **decide**, not just search for another recipe.
 
-Favourite meals are stored locally and can be used by the planning engine when generating a new week.
+## Product Goals
 
-🛒 Dynamic Shopping List
+| Principle | Goal |
+|---|---|
+| Personal | Plans reflect what the household actually enjoys |
+| Practical | The plan leads naturally into a shopping list |
+| Simple | Planning requires as few decisions as possible |
+| Familiar | Nigerian and African meals are first-class, not an afterthought |
 
-The shopping screen generates a shopping list based on the current meal plan.
+## Core Features
 
-This means the shopping list changes with the meals you choose instead of requiring you to manually create one.
+| | |
+|---|---|
+| 🗓️ **Weekly Planning** | Generates a full 7-day plan across breakfast, lunch, and dinner |
+| ❤️ **Favourites** | Saved meals feed back into future plans |
+| 🇳🇬 **Nigerian & African Meals** | Built around familiar regional cuisine, not a generic recipe catalogue |
+| 🛒 **Dynamic Shopping** | Shopping list generated automatically from the current plan |
+| 📱 **Mobile-First** | Touch-friendly, compact, fast to navigate |
+| 📲 **WhatsApp Sharing** | Share a plan through the channel people already use |
 
-📱 Mobile-first Experience
+## How It Works
 
-Chop Chop is designed primarily for mobile use, with a compact interface that works well on smaller screens.
+```mermaid
+flowchart LR
+    A[Choose Preferences] --> B[Generate Weekly Plan]
+    B --> C[7-Day Plan]
+    C --> D[Change a Meal]
+    D --> E[Save as Favourite]
+    E --> B
+```
 
-The interface uses:
+The core loop is **choose → plan → cook → save what you love → improve the next plan.**
 
-- Large touch-friendly controls
-- Rounded cards
-- Simple navigation
-- Short interactions
-- Responsive layouts
+### Planning Engine
 
-📲 WhatsApp Sharing
+Selection isn't random. When a favourite applies to a slot, the engine weights it in **60% of the time**, and never repeats the same meal in the same slot consecutively — balancing personalization against variety.
 
-The application includes a WhatsApp sharing flow so users can easily share their meal plans.
+## Architecture
 
-👨‍👩‍👧‍👦 Built for Families
+Chop Chop is built on the Next.js App Router, organized around product domains rather than a single monolithic page.
 
-The product is specifically designed around Nigerian and West African household meal planning, with a warm, home-oriented experience rather than a traditional productivity dashboard.
+```mermaid
+flowchart TB
+    U[User] --> N[Next.js Application]
+    N --> Domains["Planner · Recipes · Shopping · Pantry · Kids · School Lunch · Insights"]
+    Domains --> E[Planning Engine]
+    E --> D[Meal & Cuisine Data]
+    N --> L[(Browser localStorage)]
+```
 
----
+| Domain | Responsibility |
+|---|---|
+| `onboarding` | Collect meal and cuisine preferences |
+| `planner` | Generate and display weekly plans |
+| `recipes` | Meal and recipe experiences |
+| `shopping` | Generate shopping requirements |
+| `pantry` | Pantry-related planning |
+| `kids` / `school-lunch` | Family and school meal planning |
+| `insights` | Planning insights |
+| `engines` | Planning and selection logic |
+| `data` | Meal and application data |
 
-🧠 How Meal Planning Works
+### Project Structure
 
-The planner uses a lightweight planning engine to generate a weekly schedule.
-
-A plan contains three meals for each day:
-
-Monday
-├── Breakfast
-├── Lunch
-└── Dinner
-
-Tuesday
-├── Breakfast
-├── Lunch
-└── Dinner
-
-...
-
-Sunday
-├── Breakfast
-├── Lunch
-└── Dinner
-
-The application also uses saved favourites when generating plans.
-
-Favourite meals have a higher probability of being selected, while the planner still introduces variety.
-
-The current planning rules use a 60% favourite / 40% random selection bias when an applicable favourite exists, while preventing the same meal from being returned twice consecutively for the same meal slot.
-
----
-
-🏗️ Tech Stack
-
-Technology| Purpose
-Next.js 15| Application framework
-React 18| UI
-TypeScript| Type safety
-Next Navigation| Client-side navigation
-localStorage| Local persistence
-ESLint| Code quality
-Vercel| Intended deployment platform
-
-The project currently has no backend, authentication system, or database. User planning data is persisted locally in the browser.
-
----
-
-📁 Project Structure
-
-The application uses the Next.js App Router.
-
-meal-planner/
+```
+Meal-planner/
 ├── public/
-│   ├── favicon.svg
-│   └── icons.svg
-│
 ├── src/
 │   ├── app/
-│   │   ├── blog/
-│   │   ├── data/
-│   │   ├── engines/
-│   │   ├── insights/
-│   │   ├── kids/
-│   │   ├── onboarding/
-│   │   ├── pantry/
-│   │   ├── planner/
-│   │   ├── recipes/
-│   │   ├── school-lunch/
-│   │   ├── shopping/
-│   │   ├── home-client.tsx
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── utils.ts
-│   │
+│   │   ├── blog/  data/  engines/  insights/  kids/
+│   │   ├── onboarding/  pantry/  planner/  recipes/
+│   │   ├── school-lunch/  shopping/
+│   │   ├── home-client.tsx  layout.tsx  page.tsx  utils.ts
 │   ├── assets/
 │   └── components/
-│       ├── blog-template.tsx
-│       ├── client-layout.tsx
-│       └── recipe-template.tsx
-│
-├── public/
-├── AGENTS.md
+├── current_state.png
 ├── next.config.js
-├── package.json
-├── package-lock.json
-├── tsconfig.json
-└── README.md
+└── package.json
+```
 
-The main application is organized into separate areas for onboarding, planning, recipes, shopping, pantry management, school lunches, kids, insights, and supporting data/planning logic.
+### Data & Persistence
 
----
+The current version intentionally uses **browser localStorage** instead of a backend, keeping the app lightweight and account-free. Persisted keys: `mealplanner_favourites`, `mealplanner_selected`, `mealplanner_servings`, `mealplanner_plan`.
 
-🚀 Getting Started
+This is a deliberate trade-off — data is tied to the device/browser, with no cloud sync yet. That's the first thing the roadmap below addresses.
 
-Prerequisites
+## Design System
 
-Make sure you have:
+The visual direction is **warm, premium, familiar, African, home-oriented** — closer to a digital kitchen companion than a productivity dashboard. Fraunces for display headings, Figtree for interface text; warm cream backgrounds, forest green primary surfaces, terracotta actions, rounded touch-friendly components.
 
-- "Node.js" (https://nodejs.org/) 18.18 or later
-- npm
-- Git
+## Technology Stack
 
-1. Clone the repository
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| UI | React 18, TypeScript |
+| Persistence | Browser localStorage |
+| Typography | Fraunces + Figtree |
+| Linting | ESLint |
+| Deployment Target | Vercel |
 
+## Getting Started
+
+**Prerequisites:** Node.js 18.18+, npm, Git
+
+```bash
 git clone https://github.com/Daniel-Sunday/Meal-planner.git
 cd Meal-planner
-
-2. Install dependencies
-
 npm install
-
-3. Start the development server
-
 npm run dev
+```
 
-Open the application at:
+Visit [http://localhost:3000](http://localhost:3000).
 
-http://localhost:3000
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Create production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
 
----
+## Product Status
 
-📜 Available Scripts
+**Implemented:** splash screen · cuisine picker · 7-day meal generation · daily/weekly views · shopping list · favourites · WhatsApp sharing · mobile-first design system.
 
-Development
+**In progress / planned:** ₦ budget estimation, cloud persistence, user accounts, cross-device sync, pantry-aware planning, family preferences, expanded African cuisines.
 
-npm run dev
+## Roadmap
 
-Starts the Next.js development server.
+- **Personalization** — household profiles, family preferences, meal history, smarter repetition control
+- **Planning** — budget estimation, pantry-aware planning, ingredient availability
+- **Infrastructure** — authentication, cloud persistence, cross-device sync, backend data layer
+- **Expansion** — more Nigerian and African regional cuisines, deeper family and school-lunch planning
 
-Production Build
+The current local-first architecture is intentionally simple — no backend, no auth, no ML — and is designed to grow into a cloud-backed household food system as those needs arrive, without a rewrite.
 
-npm run build
+<br />
 
-Creates an optimized production build.
+<div align="center">
 
-Production Server
+🍲 **Pick your favourites. Plan your week. Cook with less stress.**
 
-npm run start
+Built by [Daniel Sunday](https://github.com/Daniel-Sunday)
 
-Starts the application using the production build.
-
-Linting
-
-npm run lint
-
-Runs the project's linting configuration.
-
-These scripts are defined in the repository's "package.json".
-
----
-
-💾 Data & Privacy
-
-Chop Chop currently uses browser "localStorage" for persistence.
-
-There is no account system or backend database.
-
-The application stores information such as:
-
-mealplanner_favourites
-mealplanner_selected
-mealplanner_servings
-mealplanner_plan
-
-These values allow the application to remember a user's preferences, favourites, serving count, and generated meal plan between sessions.
-
-Because this data is stored locally:
-
-- Clearing browser storage will remove saved data.
-- Data is tied to the browser/device being used.
-- There is currently no cloud synchronization between devices.
-
----
-
-🎨 Design Philosophy
-
-Chop Chop intentionally avoids the appearance of a traditional productivity dashboard.
-
-The visual direction is:
-
-- Warm
-- Premium
-- Friendly
-- Home-oriented
-- African/Nigerian-inspired
-- Mobile-first
-
-The interface uses a warm cream background, forest green brand elements, terracotta primary actions, and warm neutral surfaces.
-
-Typography is built around:
-
-- Fraunces for headings
-- Figtree for body text and interface elements
-
-The design system and interaction rules are documented in "AGENTS.md".
-
----
-
-🧩 Application Areas
-
-The current application structure includes dedicated experiences for:
-
-- Onboarding - selecting meal preferences
-- Planner - viewing the generated weekly plan
-- Recipes - browsing meal information
-- Shopping - generating a shopping list
-- Pantry - pantry-related planning
-- School Lunch - school lunch planning
-- Kids - family-oriented meal planning
-- Insights - planning insights
-- Blog - supporting content
-
-The repository's App Router structure reflects these application areas.
-
----
-
-🗺️ Current Product Status
-
-The project's internal development notes mark the following major features as completed:
-
-- ✅ Splash screen
-- ✅ Cuisine picker
-- ✅ 7-day plan generation
-- ✅ Daily meal view
-- ✅ Weekly meal view
-- ✅ Shopping list
-- ✅ Saved favourites
-- ✅ New design system
-- ✅ Today screen
-- ✅ Single-tap meal selection
-- ✅ WhatsApp sharing
-- ✅ Dynamic shopping list
-- ✅ Today highlighted in weekly view
-
-Some planned work remains, including:
-
-- ⬜ ₦ budget estimation
-- ⬜ Vercel deployment
-
-These statuses come from the project's current "AGENTS.md" feature tracker.
-
----
-
-🔮 Roadmap
-
-Potential future improvements include:
-
-- [ ] Nigerian food price/budget estimation in ₦
-- [ ] Cloud-based data persistence
-- [ ] User accounts
-- [ ] Cross-device synchronization
-- [ ] More regional African cuisines
-- [ ] More advanced meal personalization
-- [ ] Pantry-aware meal planning
-- [ ] Family member preferences
-- [ ] Improved shopping-list organization
-- [ ] Production deployment
-
-«Some of these are future possibilities rather than currently implemented features.»
-
----
-
-🤝 Contributing
-
-Contributions, ideas, bug reports, and improvements are welcome.
-
-Before making significant changes, please review the project's "AGENTS.md" file because it contains important development and design rules for the application.
-
-In particular, the project currently has strong conventions around:
-
-- UI styling
-- Component structure
-- localStorage usage
-- mobile interactions
-- navigation
-- typography
-- colour usage
-- dependencies
-
----
-
-📄 License
-
-A license has not currently been specified in the repository.
-
-If this project is intended to be publicly reusable, consider adding a "LICENSE" file.
-
----
-
-👨🏾‍💻 Author
-
-Daniel Sunday
-
-GitHub:
-https://github.com/Daniel-Sunday
-
----
-
-❤️ About Chop Chop
-
-Chop Chop was created around a simple idea:
-
-Planning what to cook shouldn't be a daily struggle.
-
-Instead of staring into the kitchen wondering what to make, choose the food you enjoy and let Chop Chop organize your week.
-
-Pick your favourites.
-Plan your week.
-Shop smarter.
-Cook with less stress.
-
----
-
-⭐ Support the Project
-
-If you find Chop Chop useful, consider giving the repository a ⭐ on GitHub and sharing it with someone who is tired of asking:
-
-«“What are we cooking today?” 🍲»
+</div>
